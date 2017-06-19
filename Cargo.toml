@@ -1,0 +1,18 @@
+[package]
+
+name = "half_edge"
+version = "0.1.0"
+description = "A doubly connected edge list (or half-edge) data structure."
+authors = [ "Nicolas Silva <nical@fastmail.com>" ]
+repository = "https://github.com/nical/vodk"
+keywords = ["geometry", "graphics"]
+license = "MIT/Apache-2.0"
+
+[lib]
+name = "half_edge"
+
+[dependencies]
+sid = "0.3.0"
+
+[replace]
+"sid:0.3.0" = { path = "../sid" }
