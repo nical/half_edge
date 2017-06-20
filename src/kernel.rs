@@ -42,25 +42,6 @@ pub type EdgeIdRange = IdRange<Edge_, Index>;
 /// A range of Id pointing to contiguous faces.
 pub type FaceIdRange = IdRange<Face_, Index>;
 
-pub trait GetNext { fn next(&self) -> EdgeId; }
-pub trait GetPrev { fn prev(&self) -> EdgeId; }
-pub trait GetOpposite { fn opposite(&self) -> EdgeId; }
-pub trait GetVertex { fn vertex(&self) -> VertexId; }
-pub trait GetFace { fn face(&self) -> FaceId; }
-pub trait SetNext { fn set_next(&mut self, id: EdgeId); }
-pub trait SetPrev { fn set_prev(&mut self, id: EdgeId); }
-pub trait SetOpposite { fn set_opposite(&mut self, id: EdgeId); }
-pub trait SetVertex { fn set_vertex(&mut self, id: VertexId); }
-pub trait SetFace { fn set_face(&mut self, id: FaceId); }
-
-pub trait EdgeContainer {
-    type EdgeType;
-    fn edge(&self, id: EdgeId) -> &Self::EdgeType;
-}
-pub trait MutEdgeContainer : EdgeContainer {
-    fn mut_edge(&mut self, id: EdgeId) -> &mut Self::EdgeType;
-}
-
 /// The structure holding the data specific to each half edge.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct HalfEdge {
@@ -71,24 +52,26 @@ pub struct HalfEdge {
     pub face: FaceId, // adjacent face
 }
 
-impl GetNext for HalfEdge { fn next(&self) -> EdgeId { self.next } }
-impl GetPrev for HalfEdge { fn prev(&self) -> EdgeId { self.prev } }
-impl GetOpposite for HalfEdge { fn opposite(&self) -> EdgeId { self.opposite } }
-impl GetVertex for HalfEdge { fn vertex(&self) -> VertexId { self.vertex } }
-impl GetFace for HalfEdge { fn face(&self) -> FaceId { self.face } }
-impl SetNext for HalfEdge { fn set_next(&mut self, id: EdgeId) { self.next = id; } }
-impl SetPrev for HalfEdge { fn set_prev(&mut self, id: EdgeId) { self.prev = id; } }
-impl SetOpposite for HalfEdge { fn set_opposite(&mut self, id: EdgeId) { self.opposite = id; } }
-impl SetVertex for HalfEdge { fn set_vertex(&mut self, id: VertexId) { self.vertex = id; } }
-impl SetFace for HalfEdge { fn set_face(&mut self, id: FaceId) { self.face = id; } }
+impl HalfEdge {
+    pub fn next(&self) -> EdgeId { self.next }
 
-impl EdgeContainer for ConnectivityKernel {
-    type EdgeType = HalfEdge;
-    fn edge(&self, id: EdgeId) -> &HalfEdge { &self[id] }
-}
+    pub fn prev(&self) -> EdgeId { self.prev }
 
-impl MutEdgeContainer for ConnectivityKernel {
-    fn mut_edge(&mut self, id: EdgeId) -> &mut HalfEdge { &mut self[id] }
+    pub fn opposite(&self) -> EdgeId { self.opposite }
+
+    pub fn vertex(&self) -> VertexId { self.vertex }
+
+    pub fn face(&self) -> FaceId { self.face }
+
+    pub fn set_next(&mut self, id: EdgeId) { self.next = id; }
+
+    pub fn set_prev(&mut self, id: EdgeId) { self.prev = id; }
+
+    pub fn set_opposite(&mut self, id: EdgeId) { self.opposite = id; }
+
+    pub fn set_vertex(&mut self, id: VertexId) { self.vertex = id; }
+
+    pub fn set_face(&mut self, id: FaceId) { self.face = id; }
 }
 
 /// The structure holding the data specific to each face.
@@ -146,6 +129,8 @@ impl ConnectivityKernel {
 
     pub fn edge(&self, id: EdgeId) -> &HalfEdge { &self.edges[id] }
 
+    pub fn mut_edge(&mut self, id: EdgeId) -> &mut HalfEdge { &mut self[id] }
+
     pub fn face(&self, id: FaceId) -> &Face { &self.faces[id] }
 
     pub fn first_edge(&self) -> Option<EdgeId> { self.edges.first_id() }
@@ -156,14 +141,14 @@ impl ConnectivityKernel {
 
     pub fn contains_face(&self, id: FaceId) -> bool { self.faces.has_id(id) }
 
-    pub fn walk_edge_ids_around_face<'l>(&'l self, id: FaceId) -> EdgeIdLoop<'l, ConnectivityKernel> {
+    pub fn walk_edge_ids_around_face<'l>(&'l self, id: FaceId) -> EdgeIdLoop<'l> {
         let edge = self[id].first_edge;
         let prev = if is_valid(edge) { self[edge].prev } else { NO_EDGE };
         EdgeIdLoop::new(self, edge, prev)
     }
 
     /// Iterate over halfedge ids around a loop
-    pub fn walk_edge_ids<'l>(&'l self, first: EdgeId) -> EdgeIdLoop<'l, ConnectivityKernel> {
+    pub fn walk_edge_ids<'l>(&'l self, first: EdgeId) -> EdgeIdLoop<'l> {
         EdgeIdLoop::new(self, first, self[first].prev)
     }
 
